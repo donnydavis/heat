@@ -55,14 +55,9 @@ resources:
           user_data:
             str_replace:
               template: |
-                cat << EOF > /var/www/html/index.php
-                <?php 
-                  echo "<h1>Hello, World!</h1>";
-                  $serverIP = $_SERVER['SERVER_ADDR'];
-                  echo date('Y-m-d H:i:s');
-                  echo "<p>Server IP is: <b>{$serverIP}</b></p>";
-                ?>
-                EOF
+                yum -y install httpd php
+                curl -o /var/www/html/index.php https://raw.githubusercontent.com/donnydavis/heat/master/rhel/index.php
+                
                 systemctl enable httpd
                 systemctl restart httpd
               params: 
