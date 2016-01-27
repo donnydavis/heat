@@ -34,16 +34,15 @@ parameters:
     default: m1.medium
   public_net_id:
     type: string
-    description: >
-      ID of public network for which floating IP addresses will be allocated
+    description: Add Public Network UUID
     default: 431a16f4-8060-4e9a-9e41-e1bbd71cf09f
   private_net_id:
     type: string
-    description: ID of private network into which servers get deployed
+    description: Add Private Netowrk UUID
     default: f50949d1-16a3-41b6-b5c0-8b4a41f6776e
   private_subnet_id:
     type: string
-    description: ID of private sub network into which servers get deployed
+    description: Add Subnet for Private Network UUID
     default: 47615aa0-eabd-4ba9-8485-72c8c3d9d039
 
 resources:
