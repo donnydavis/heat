@@ -1,0 +1,133 @@
+heat_template_version: 2013-05-23
+
+description: >
+  This is a HOT template to create a IDM Server, and connect it to the public internet
+parameters:
+  key_name:
+    type: string
+    description: Name of keypair to assign to servers
+    default: precision
+  user_name:
+    type: string
+    description: User to be created
+    default: admin
+  admin_password:
+    type: string
+    description: Password to be used for IPA install
+    default: RH+cisco1234
+  image:
+    type: string
+    description: Name of image to use for servers
+    default: centos-cloud-7
+  dns_prefix:
+    description: your DNS prefix
+    type: string
+    default: fortnebula.com
+  dns_server:
+    description: upstream DNS server
+    type: string
+    default: 8.8.8.8
+  flavor:
+    type: string
+    description: Flavor to use for servers
+    default: m1.medium
+  public_net_id:
+    type: string
+    description: >
+      ID of public network for which floating IP addresses will be allocated
+    default: 431a16f4-8060-4e9a-9e41-e1bbd71cf09f
+  private_net_id:
+    type: string
+    description: ID of private network into which servers get deployed
+    default: f50949d1-16a3-41b6-b5c0-8b4a41f6776e
+  private_subnet_id:
+    type: string
+    description: ID of private sub network into which servers get deployed
+    default: 47615aa0-eabd-4ba9-8485-72c8c3d9d039
+
+resources:
+  idm:
+    type: OS::Nova::Server
+    properties:
+      name: idm
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: key_name }
+      networks:
+        - port: { get_resource: idm_port }
+      user_data:
+        str_replace:
+          template: |
+            #!/bin/bash -v
+            IP=$(/sbin/ifconfig eth0 | grep "\<inet\>" | cut -d: -f2 | awk '{ print $2}')
+            echo "$IP idm.$dns_prefix$" >> /etc/hosts
+            hostnamectl set-hostname idm.$dns_prefix$ 
+            yum -y install ipa-server ipa-server-dns firewalld
+            systemctl enable firewalld
+            systemctl restart firewalld
+            ipa-server-install -a $admin_password$ --hostname=idm.$dns_prefix$ --realm FORTNEBULA.COM -p $admin_password$ -n $dns_prefix$ --setup-dns --no-forwarders -U
+            /usr/bin/firewall-cmd --permanent --add-service=dns
+            /usr/bin/firewall-cmd --permanent --add-service=http
+            /usr/bin/firewall-cmd --permanent --add-service=https
+            /usr/bin/firewall-cmd --permanent --add-service=kerberos
+            /usr/bin/firewall-cmd --permanent --add-service=kpasswd
+            /usr/bin/firewall-cmd --permanent --add-service=ldap
+            /usr/bin/firewall-cmd --permanent --add-service=ldaps
+            /usr/bin/firewall-cmd --permanent --add-service=ntp
+             systemctl restart firewalld
+          params:
+            $dns_prefix$: { get_param: dns_prefix }
+            $dns_server$: { get_param: dns_server }
+            $user_name$: { get_param: user_name }
+            $admin_password$: { get_param: admin_password }
+            
+
+
+  idm_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: private_net_id }
+      fixed_ips:
+        - subnet_id: { get_param: private_subnet_id }
+      security_groups: [{ get_resource: server_security_group }]
+
+  idm_floating_ip:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network_id: { get_param: public_net_id }
+      port_id: { get_resource: idm_port }
+
+  
+  server_security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description: Add security group rules for server
+      name: idm-group
+      rules:
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 22
+          port_range_max: 22
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: icmp
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 80
+          port_range_max: 80
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 443
+          port_range_max: 443
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: udp
+          port_range_min: 53
+          port_range_max: 53
+
+
+outputs:
+  idm_private_ip:
+    description: IP address of server1 in private network
+    value: { get_attr: [ idm, first_address ] }
+  idm_public_ip:
+    description: Floating IP address of server1 in public network
+    value: { get_attr: [ idm_floating_ip, floating_ip_address ] }
