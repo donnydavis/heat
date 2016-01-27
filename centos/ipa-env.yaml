@@ -4,7 +4,7 @@ parameters:
   admin_password: RH+cisco1234
   image: centos-cloud-7
   dns_prefix: fortnebula.com
-  dns_server: 8.8.4.4
+  dns_server: 8.8.4
   flavor: m1.medium
   public_net_id: 431a16f4-8060-4e9a-9e41-e1bbd71cf09f
   private_net_id: f50949d1-16a3-41b6-b5c0-8b4a41f6776e

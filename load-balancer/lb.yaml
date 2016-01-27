@@ -4,12 +4,14 @@ parameters:
   image:
     type: string
     description: Image used for servers
+    default: centos-cloud-7
   key_name:
     type: string
     description: SSH key to connect to the servers
   flavor:
     type: string
     description: flavor used by the servers
+    default: m1.small
   pool_id:
     type: string
     description: Pool to contact
