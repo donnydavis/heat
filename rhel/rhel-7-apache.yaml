@@ -57,6 +57,7 @@ resources:
               template: |
                 yum -y install httpd php
                 curl -o /var/www/html/index.php https://raw.githubusercontent.com/donnydavis/heat/master/rhel/index.php
+                
                 systemctl enable httpd
                 systemctl restart httpd
                 
