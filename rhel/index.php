@@ -9,4 +9,4 @@ echo "<p>Server IP is: <b>{$serverIP}</b></p>";
 phpinfo();
 
 ?>
-?>
+
