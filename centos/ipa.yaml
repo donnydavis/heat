@@ -1,3 +1,4 @@
+###You need to login to the console to provide enough entropy for this to complete
 heat_template_version: 2013-05-23
 
 description: >
