@@ -8,8 +8,7 @@ description: >
 parameters:
   key_name:
     type: string
-    description: Name of keypair to assign to servers
-    default: precision
+    description: The name of your ssh key
   image:
     type: string
     description: Name of image to use for servers
